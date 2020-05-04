@@ -35,6 +35,8 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth-api-phone:17.4.0'
     //Optional for phone number hint
     implementation 'com.google.android.gms:play-services-auth:18.0.0'
+    //pinView
+    implementation 'com.github.mukeshsolanki:android-otpview-pinview:2.1.0'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'

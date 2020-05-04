@@ -8,16 +8,20 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.core.view.TintableBackgroundView
+import androidx.core.view.get
 import com.example.smsretriver.MySMSBroadcastReceiver.OTPReceiveListener
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.credentials.HintRequest
 import com.google.android.gms.auth.api.phone.SmsRetriever
-import com.google.android.gms.common.api.GoogleApiClient
+import com.mukesh.OnOtpCompletionListener
+import com.mukesh.OtpView
 import kotlinx.android.synthetic.main.activity_main.*
 import java.security.AccessController.getContext
 
-class MainActivity : AppCompatActivity() , OTPReceiveListener {
+class MainActivity : AppCompatActivity() , OnOtpCompletionListener {
 private val RC_HINT = 2
+    private var  otpFinal:String?=null
     private val smsBroadcastReceiver by lazy { MySMSBroadcastReceiver() }
     override fun onStart() {
         super.onStart()
@@ -28,8 +32,8 @@ private val RC_HINT = 2
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-
         val appSignature = AppSignatureHelper(this)
+        otp_view.setOtpCompletionListener(this)
         appSignature.appSignatures
         btn.setOnClickListener(View.OnClickListener {
 
@@ -43,17 +47,19 @@ private val RC_HINT = 2
         // can be made blocking using Tasks.await(task, [timeout]);
         task.addOnSuccessListener {
             // Successfully started retriever, expect broadcast intent
-            // ...
-            otp_txt.text = "Waiting for the OTP"
+            Toast.makeText(this@MainActivity, "Waiting for the OTP", Toast.LENGTH_SHORT).show();
+
             val otpListener = object :MySMSBroadcastReceiver.OTPReceiveListener{
                 override fun onOTPReceived(otp: String) {
                     Toast.makeText(this@MainActivity, "Otp Received $otp", Toast.LENGTH_LONG).show();
-                    otp_txt.text="Otp Received $otp"
-                    Log.d("OTP_Message_main", otp)                }
+                    otp_view.setText(otp)
+                    otpFinal = otp
+                    Log.d("OTP_Message_main", otp)
+
+                }
 
                 override fun onOTPTimeOut() {
                     Toast.makeText(this@MainActivity, "Time out", Toast.LENGTH_LONG).show();
-
                 }
             }
             smsBroadcastReceiver.initOTPListener(otpListener)
@@ -63,25 +69,28 @@ private val RC_HINT = 2
 
         task.addOnFailureListener {
             // Failed to start retriever, inspect Exception for more details
-            // ...
-            otp_txt.text = "Cannot Start SMS Retriever"
+            Toast.makeText(this,"Cannot start SMS retriver",Toast.LENGTH_SHORT).show()
         }
-    }
-
-    override fun onOTPReceived(otp: String) {
-        Toast.makeText(this, "Otp Received $otp", Toast.LENGTH_LONG).show();
-        otp_txt.text="Otp Received $otp"
-        Log.d("OTP_Message_main", otp)
-    }
-
-    override fun onOTPTimeOut() {
-        TODO("Not yet implemented")
     }
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(smsBroadcastReceiver)
     }
+
+    override fun onOtpCompleted(otp: String?) {
+        Log.d("otp=>", otp)
+
+      otpFinal.let {
+          if (otpFinal.equals(otp)){
+              Toast.makeText(this,"Success",Toast.LENGTH_LONG).show()
+          }else{
+              Toast.makeText(this,"not Success",Toast.LENGTH_LONG).show()
+          }
+      }
+    }
+
+
     //Obtain number through hint picker (Optional)
 
 //    @SuppressLint("LongLogTag")
@@ -103,3 +112,7 @@ private val RC_HINT = 2
 //        }
 //    }
 }
+
+
+
+
